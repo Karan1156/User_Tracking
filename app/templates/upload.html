@@ -1,96 +1,354 @@
 <!DOCTYPE html>
 <html lang="en">
 
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Document</title>
-        <style>
-            body {
-                font-family: Arial, sans-serif; /* Set a default font for the body */
-                background-color: #f4f4f4; /* Light background color for contrast */
-                display: flex;
-                flex-direction: column;
-                justify-content: center;
-                align-items: center;
-                height: 100vh; /* Full viewport height */
-                margin: 0; /* Remove default margin */
-            }
-            
-            h2 {
-                color: #333; /* Darker color for the heading */
-                margin-bottom: 20px; /* Space below the heading */
-            }
-            
-            form {
-                display: flex;
-                align-items: center;
-                flex-direction: column;
-                justify-content: center;
-                width: 90%; /* Responsive width */
-                max-width: 600px; /* Max width for larger screens */
-                height: auto; /* Auto height */
-                padding: 20px; /* Padding inside the form */
-                font-size: larger;
-                border: 2px solid #ccc; /* Lighter border color */
-                border-radius: 10px; /* Rounded corners */
-                background-color: white; /* White background for the form */
-                box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1); /* Subtle shadow for depth */
-            }
-            
-            label {
-                background-color: aqua;
-                padding: 5px; /* Padding for labels */
-                border-radius: 5px; /* Rounded corners for labels */
-                margin-bottom: 10px; /* Space below labels */
-            }
-            
-            input, textarea {
-                padding: 10px; /* Increased padding for better touch targets */
-                width: 100%; /* Full width for inputs */
-                max-width: 400px; /* Max width for inputs */
-                border-radius: 5px; /* Rounded corners */
-                border: 1px solid #ccc; /* Light border */
-                margin-bottom: 15px; /* Space below inputs */
-                transition: border-color 0.3s; /* Smooth transition for border color */
-            }
-            
-            input:focus, textarea:focus {
-                border-color: aqua; /* Change border color on focus */
-                outline: none; /* Remove default outline */
-            }
-            
-            textarea {
-                height: 100px; /* Fixed height for textarea */
-                resize: none; /* Disable resizing */
-            }
-            
-            button {
-                border-radius: 5px; /* Rounded corners */
-                background-color: rgb(69, 69, 192);
-                color: white; /* White text color */
-                width: 100%; /* Full width for button */
-                max-width: 400px; /* Max width for button */
-                height: 40px;
-                border: none; /* Remove default border */
-                cursor: pointer; /* Pointer cursor on hover */
-                transition: background-color 0.3s; /* Smooth transition for background color */
-            }
-            
-            button:hover {
-                background-color: blue; /* Change background color on hover */
-            }
-        </style>
-    </head>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Blog Post</title>
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #4361ee;
+            --secondary-color: #3a0ca3;
+            --accent-color: #7209b7;
+            --light-color: #f8f9fa;
+            --dark-color: #212529;
+            --success-color: #4cc9f0;
+            --border-radius: 12px;
+            --box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            --transition: all 0.3s ease;
+        }
 
-    <body>
-        <h2>Create Blog</h2>
-        <form method="post" enctype="multipart/form-data">
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+            color: var(--dark-color);
+        }
+
+        .container {
+            width: 100%;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--secondary-color);
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            color: #6c757d;
+            font-size: 1.1rem;
+        }
+
+        .blog-form {
+            background-color: white;
+            padding: 40px;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            transition: var(--transition);
+        }
+
+        .blog-form:hover {
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15);
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+            position: relative;
+        }
+
+        .form-group label {
+            display: block;
+            font-weight: 500;
+            margin-bottom: 10px;
+            color: var(--secondary-color);
+            font-size: 1.1rem;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e2e8f0;
+            border-radius: var(--border-radius);
+            font-size: 1rem;
+            transition: var(--transition);
+            font-family: 'Poppins', sans-serif;
+        }
+
+        .form-input:focus {
+            border-color: var(--primary-color);
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.2);
+        }
+
+        textarea.form-input {
+            min-height: 150px;
+            resize: vertical;
+        }
+
+        .file-input-container {
+            position: relative;
+            overflow: hidden;
+            display: inline-block;
+            width: 100%;
+        }
+
+        .file-input {
+            position: absolute;
+            left: 0;
+            top: 0;
+            opacity: 0;
+            width: 100%;
+            height: 100%;
+            cursor: pointer;
+        }
+
+        .file-input-label {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 30px;
+            border: 2px dashed #c3cfe2;
+            border-radius: var(--border-radius);
+            background-color: #f8f9fa;
+            text-align: center;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .file-input-label:hover {
+            border-color: var(--primary-color);
+            background-color: #f0f4ff;
+        }
+
+        .file-input-label i {
+            font-size: 2.5rem;
+            color: var(--primary-color);
+            margin-bottom: 15px;
+        }
+
+        .file-input-text {
+            color: #6c757d;
+        }
+
+        .file-input-text span {
+            color: var(--primary-color);
+            font-weight: 500;
+        }
+
+        .submit-btn {
+            display: block;
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            border: none;
+            border-radius: var(--border-radius);
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            box-shadow: 0 4px 15px rgba(67, 97, 238, 0.3);
+        }
+
+        .submit-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 7px 20px rgba(67, 97, 238, 0.4);
+        }
+
+        .submit-btn:active {
+            transform: translateY(0);
+        }
+
+        .form-footer {
+            text-align: center;
+            margin-top: 30px;
+            color: #6c757d;
+        }
+
+        .form-footer a {
+            color: var(--primary-color);
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .form-footer a:hover {
+            text-decoration: underline;
+        }
+
+        /* Image preview */
+        .image-preview {
+            display: none;
+            max-width: 100%;
+            margin-top: 20px;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .image-preview img {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+
+        /* Character count */
+        .char-count {
+            text-align: right;
+            font-size: 0.9rem;
+            color: #6c757d;
+            margin-top: 5px;
+        }
+
+        /* Responsive design */
+        @media (max-width: 768px) {
+            .blog-form {
+                padding: 25px;
+            }
+
+            .header h1 {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="header">
+            <h1><i class="fas fa-pen-fancy"></i> Create a New Blog Post</h1>
+            <p>Share your thoughts and ideas with the world</p>
+        </div>
+
+        <form class="blog-form" method="post" enctype="multipart/form-data">
             {% csrf_token %}
-            {{ form.as_p }}
-            <button type="submit">Upload</button>
+            
+            <div class="form-group">
+                <label for="id_title"><i class="fas fa-heading"></i> Blog Title</label>
+                <input type="text" id="id_title" name="title" class="form-input" placeholder="Enter a captivating title" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="id_content"><i class="fas fa-edit"></i> Content</label>
+                <textarea id="id_content" name="content" class="form-input" placeholder="Write your blog content here..." required></textarea>
+                <div class="char-count" id="charCount">0 characters</div>
+            </div>
+            
+            <div class="form-group">
+                <label for="id_image"><i class="fas fa-image"></i> Blog Image</label>
+                <div class="file-input-container">
+                    <div class="file-input-label">
+                        <i class="fas fa-cloud-upload-alt"></i>
+                        <div class="file-input-text">Drag & drop your image here or <span>browse</span></div>
+                        <div class="file-input-text">Recommended: 1200x630 pixels</div>
+                    </div>
+                    <input type="file" id="id_image" name="image" class="file-input" accept="image/*">
+                </div>
+                <div class="image-preview" id="imagePreview">
+                    <img src="" alt="Image preview">
+                </div>
+            </div>
+            
+            <button type="submit" class="submit-btn">
+                <i class="fas fa-upload"></i> Publish Blog Post
+            </button>
         </form>
+        
+        <div class="form-footer">
+            <p>Need inspiration? <a href="#">View popular blogs</a></p>
+        </div>
+    </div>
 
-    </body>
+    <script>
+        // Character count for content textarea
+        const contentTextarea = document.getElementById('id_content');
+        const charCount = document.getElementById('charCount');
+        
+        contentTextarea.addEventListener('input', function() {
+            const length = this.value.length;
+            charCount.textContent = `${length} characters`;
+            
+            if (length > 5000) {
+                charCount.style.color = '#e63946';
+            } else if (length > 3000) {
+                charCount.style.color = '#fca311';
+            } else {
+                charCount.style.color = '#6c757d';
+            }
+        });
+        
+        // Image preview functionality
+        const imageInput = document.getElementById('id_image');
+        const imagePreview = document.getElementById('imagePreview');
+        
+        imageInput.addEventListener('change', function() {
+            const file = this.files[0];
+            if (file) {
+                const reader = new FileReader();
+                
+                reader.addEventListener('load', function() {
+                    imagePreview.style.display = 'block';
+                    imagePreview.querySelector('img').src = this.result;
+                });
+                
+                reader.readAsDataURL(file);
+            } else {
+                imagePreview.style.display = 'none';
+            }
+        });
+        
+        // Drag and drop for image upload
+        const fileInputLabel = document.querySelector('.file-input-label');
+        
+        fileInputLabel.addEventListener('dragover', function(e) {
+            e.preventDefault();
+            this.style.borderColor = '#4361ee';
+            this.style.backgroundColor = '#f0f4ff';
+        });
+        
+        fileInputLabel.addEventListener('dragleave', function() {
+            this.style.borderColor = '#c3cfe2';
+            this.style.backgroundColor = '#f8f9fa';
+        });
+        
+        fileInputLabel.addEventListener('drop', function(e) {
+            e.preventDefault();
+            this.style.borderColor = '#c3cfe2';
+            this.style.backgroundColor = '#f8f9fa';
+            
+            if (e.dataTransfer.files.length) {
+                imageInput.files = e.dataTransfer.files;
+                
+                // Trigger change event manually
+                const event = new Event('change');
+                imageInput.dispatchEvent(event);
+            }
+        });
+    </script>
+</body>
 
 </html>
