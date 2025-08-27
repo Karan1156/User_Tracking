@@ -108,7 +108,7 @@ def user_dashboard(request):
         # Check what field name your Visitor model uses for the timestamp
         # Common field names: 'created_at', 'timestamp', 'date_created', or 'date'
         visitor_counts = Visitor.objects.filter(user=request.user) \
-            .annotate(date_only=TruncDate('created_at')) \
+            .annotate(date_only=TruncDate('date')) \
             .values('date_only') \
             .annotate(count=Count('id')) \
             .order_by('date_only')
@@ -261,4 +261,5 @@ def pop(request, id=None):
                 return redirect('home')
 
     return render(request, 'pop.html')
+
 
