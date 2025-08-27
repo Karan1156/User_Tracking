@@ -18,6 +18,7 @@ urlpatterns = [
     #-------------admin routing--------
     path('admin_dashboard/',views.admin_dashboard,name='admin_dashboard'),
     path('delete_user/<int:id>/',views.delete_user,name='delete_user'),
+    path('health/', views.health_check, name='health-check'),
 ]
 
 if settings.DEBUG:
