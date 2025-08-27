@@ -36,7 +36,7 @@ def health_check(request):
 
 def home(request, id=None):
     if id:
-        return redirect(f'/pop/{id}')  # it fetch the visitor data and then show the blogs
+        return redirect('pop', id=id)  # Use URL name instead of hardcoded path
     blogs = Blog.objects.all().order_by('-id')
     return render(request, 'home.html', {'blogs': blogs})
 
@@ -103,27 +103,41 @@ def signup(request):
 
 @login_required
 def user_dashboard(request):
-    # Get visitor counts by date (single efficient query)
-    visitor_counts = Visitor.objects.filter(user=request.user) \
-        .annotate(date_only=TruncDate('date')) \
-        .values('date_only') \
-        .annotate(count=Count('id')) \
-        .order_by('date_only')
-    
-    # Extract dates and counts
-    dates = [v['date_only'].strftime('%Y-%m-%d') for v in visitor_counts]
-    counts = [v['count'] for v in visitor_counts]
-    
-    # Get user's blogs
-    blogs = Blog.objects.filter(author=request.user).values('id', 'title', 'created_at')  # Be specific about fields
-    
-    # Pass the data to the template
-    return render(request, 'user_dashboard.html', {
-        'visitor_dates': json.dumps(dates),
-        'visitor_counts': json.dumps(counts),
-        'id': request.user.id,
-        'blogs': blogs,
-    })
+    try:
+        # Get visitor counts by date (single efficient query)
+        # Check what field name your Visitor model uses for the timestamp
+        # Common field names: 'created_at', 'timestamp', 'date_created', or 'date'
+        visitor_counts = Visitor.objects.filter(user=request.user) \
+            .annotate(date_only=TruncDate('created_at')) \  # Change 'created_at' to your actual field name
+            .values('date_only') \
+            .annotate(count=Count('id')) \
+            .order_by('date_only')
+        
+        # Extract dates and counts
+        dates = [v['date_only'].strftime('%Y-%m-%d') for v in visitor_counts]
+        counts = [v['count'] for v in visitor_counts]
+        
+        # Get user's blogs
+        blogs = Blog.objects.filter(author=request.user).values('id', 'title', 'created_at')
+        
+        # Pass the data to the template
+        return render(request, 'user_dashboard.html', {
+            'visitor_dates': json.dumps(dates),
+            'visitor_counts': json.dumps(counts),
+            'id': request.user.id,
+            'blogs': blogs,
+        })
+    except Exception as e:
+        # Log the error for debugging
+        print(f"Error in user_dashboard: {e}")
+        # Fallback without visitor data
+        blogs = Blog.objects.filter(author=request.user).values('id', 'title', 'created_at')
+        return render(request, 'user_dashboard.html', {
+            'visitor_dates': json.dumps([]),
+            'visitor_counts': json.dumps([]),
+            'id': request.user.id,
+            'blogs': blogs,
+        })
 
 
 @login_required
@@ -141,7 +155,7 @@ def create_blog(request, id=None):
             blog.save()
             messages.success(request, "Blog saved successfully!")
             return redirect('user_dashboard')
-
+    
     return render(request, 'upload.html', {'form': form})
 
 
@@ -169,8 +183,9 @@ def is_admin(user):
 @user_passes_test(is_admin)
 def admin_dashboard(request):
     users = User.objects.annotate(blog_count=Count('blog'))
-    signup_dates = [DateFormat(user.date_joined).format('Y-m-d') for user in users]
     
+    # Use proper date formatting
+    signup_dates = [user.date_joined.strftime('%Y-%m-%d') for user in users]
     signup_dates_json = json.dumps(signup_dates)
 
     context = {
@@ -206,7 +221,7 @@ def get_public_ip(request):
 def get_location(ip):
     # Use ipinfo.io to get the location based on the IP address
     try:
-        response = requests.get(f'https://ipinfo.io/{ip}/json')
+        response = requests.get(f'https://ipinfo.io/{ip}/json', timeout=5)
         data = response.json()
         return data.get('loc')  # This returns a string like "latitude,longitude"
     except:
@@ -214,6 +229,11 @@ def get_location(ip):
 
 
 def pop(request, id=None):
+    if id is None:
+        # Handle case where no ID is provided
+        messages.error(request, "No user specified.")
+        return redirect('home')
+        
     if request.method == 'POST':
         name = request.POST.get('name')  # Use request.POST to get form data
         if name:  # Check if name is provided
