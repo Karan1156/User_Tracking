@@ -6,7 +6,8 @@ from django.conf.urls.static import static
 urlpatterns = [
     # Home URLs
     path('', views.home, name="home"),  # Home without ID
-    path('home/<int:id>/', views.home, name="home_with_id"),  # Home with ID
+    path('home/<int:id>/', views.home, name="home_with_id"), 
+    path('blog/view/<int:id>/', views.view_blog, name='view_blog'),# Home with ID
     
     # Authentication URLs
     path('login/', views.user_login, name='login'),
