@@ -261,5 +261,8 @@ def pop(request, id=None):
                 return redirect('home')
 
     return render(request, 'pop.html')
+def view_blog(request, id):
+    blog = get_object_or_404(Blog, id=id)
+    return render(request, 'view_blog.html', {'blog': blog})
 
 
