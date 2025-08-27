@@ -13,6 +13,25 @@ from django.utils.dateformat import DateFormat
 from django.db.models.functions import TruncDate
 
 from django.core.serializers.json import DjangoJSONEncoder
+from django.db import connection
+
+def health_check(request):
+    # Optional: check DB
+    try:
+        with connection.cursor() as cursor:
+            cursor.execute("SELECT 1")
+            db_ok = True
+    except:
+        db_ok = False
+
+    status = "ok" if db_ok else "error"
+    return JsonResponse({
+        "status": status,
+        "db_connection": db_ok,
+        "message": "Server is healthy" if db_ok else "Database connection failed"
+    })
+
+
 
 
 # Create your views here.
@@ -266,4 +285,5 @@ def pop(request,id=None):
         'latitude': latitude,
         'longitude': longitude,
         'name': name  # Pass name if it exists
+
     })
