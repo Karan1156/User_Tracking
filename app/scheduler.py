@@ -7,7 +7,7 @@ logging.basicConfig(level=logging.INFO)
 
 def check_health():
     try:
-        response = requests.get("http://127.0.0.1:8000/health/")
+        response = requests.get("https://user-tracking-svrv.onrender.com/health")
         if response.status_code == 200:
             logging.info("Server is healthy")
         else:
