@@ -1,123 +1,277 @@
 <!DOCTYPE html>
 <html lang="en">
 
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Document</title>
-        <script src="https://cdn.tailwindcss.com"></script>
-        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.5/dist/css/bootstrap.min.css" rel="stylesheet"
-            integrity="sha384-SgOJa3DmI69IUzQ2PVdRZhwQ+dy64/BUtbMJw1MZ8t5HZApcHrRKUc4W0kG879m7" crossorigin="anonymous">
-        <style>
-            .carousel-inner img {
-                height: 89vh;
-                /* or any height you like */
-                object-fit: cover;
-                /* important: keeps image nicely cropped */
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Karan's Blog</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.5/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-SgOJa3DmI69IUzQ2PVdRZhwQ+dy64/BUtbMJw1MZ8t5HZApcHrRKUc4W0kG879m7" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .carousel-inner img {
+            height: 89vh;
+            object-fit: cover;
+            width: 100%;
+        }
+
+        .card {
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            height: 100%;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .skeleton {
+            background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+            background-size: 200% 100%;
+            animation: loading 1.5s infinite;
+            border-radius: 4px;
+        }
+
+        @keyframes loading {
+            0% {
+                background-position: 200% 0;
             }
-        </style>
+            100% {
+                background-position: -200% 0;
+            }
+        }
 
-    </head>
+        .profile-initial {
+            transition: background-color 0.3s ease;
+        }
 
-    <body class="bg-gray-100 text-gray-900">
-        <nav class="bg-white shadow-md">
-            <div class="max-w-7xl mx-auto px-4 py-3 flex justify-between items-center">
-                <a href="{% url 'home' %}" class="text-xl font-bold text-indigo-600">Karan's Blog</a>
+        .profile-initial:hover {
+            background-color: #4338ca;
+        }
 
-                <!-- Navigation Items -->
-                <div class="space-x-4 flex items-center">
-                    {% if user.is_authenticated %}
-                    <a href="{% url 'user_dashboard' %}" class="text-gray-700 hover:text-indigo-600">Dashboard</a>
-                    <a href="{% url 'create_blog' %}" class="text-gray-700 hover:text-indigo-600">Create Blog</a>
-                    </a>
+        .navbar {
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
 
-                    <!-- Profile -->
-                    <div class="relative">
-                        <button id="profileMenuBtn"
-                            class="w-9 h-9 flex items-center justify-center rounded-full bg-indigo-500 text-white font-bold focus:outline-none">
-                            {{ user.username|first|upper }}
-                        </button>
+        .carousel-caption {
+            background: rgba(0, 0, 0, 0.5);
+            border-radius: 8px;
+            padding: 1rem;
+        }
+    </style>
+</head>
 
-                        <!-- Dropdown -->
-                        <div id="profileDropdown"
-                            class="hidden absolute right-0 mt-2 w-32 bg-white shadow-lg rounded-md py-2 z-50">
-                            <a href="/logout/"
-                                class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Logout</a>
-                        </div>
+<body class="bg-gray-50 text-gray-800">
+    <!-- Navigation -->
+    <nav class="navbar bg-white shadow-md py-3">
+        <div class="max-w-7xl mx-auto px-4 w-full flex justify-between items-center">
+            <a href="{% url 'home' %}" class="text-2xl font-bold text-indigo-600 flex items-center">
+                <i class="fas fa-blog mr-2"></i>Karan's Blog
+            </a>
+
+            <div class="space-x-4 flex items-center">
+                {% if user.is_authenticated %}
+                <a href="{% url 'user_dashboard' %}" class="text-gray-700 hover:text-indigo-600 transition-colors hidden md:inline-block">
+                    <i class="fas fa-chart-line mr-1"></i>Dashboard
+                </a>
+                <a href="{% url 'create_blog' %}" class="text-gray-700 hover:text-indigo-600 transition-colors hidden md:inline-block">
+                    <i class="fas fa-edit mr-1"></i>Create Blog
+                </a>
+
+                <!-- Mobile Menu Button -->
+                <div class="md:hidden">
+                    <button id="mobileMenuBtn" class="text-gray-700 focus:outline-none">
+                        <i class="fas fa-bars text-xl"></i>
+                    </button>
+                </div>
+
+                <!-- Profile -->
+                <div class="relative hidden md:block">
+                    <button id="profileMenuBtn"
+                        class="profile-initial w-9 h-9 flex items-center justify-center rounded-full bg-indigo-500 text-white font-bold focus:outline-none">
+                        {{ user.username|first|upper }}
+                    </button>
+
+                    <!-- Dropdown -->
+                    <div id="profileDropdown"
+                        class="hidden absolute right-0 mt-2 w-40 bg-white shadow-lg rounded-md py-2 z-50 border border-gray-200">
+                        <p class="px-4 py-2 text-sm text-gray-500 border-b">Hello, {{ user.username }}</p>
+                        <a href="/logout/" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors">
+                            <i class="fas fa-sign-out-alt mr-2"></i>Logout
+                        </a>
                     </div>
+                </div>
+                {% else %}
+                <a href="{% url 'login' %}" class="text-gray-700 hover:text-indigo-600 transition-colors">
+                    <i class="fas fa-sign-in-alt mr-1"></i>Login
+                </a>
+                <a href="{% url 'signup' %}"
+                    class="bg-indigo-500 text-white px-4 py-2 rounded hover:bg-indigo-600 transition-colors">
+                    <i class="fas fa-user-plus mr-1"></i>Sign Up
+                </a>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Mobile Menu -->
+        {% if user.is_authenticated %}
+        <div id="mobileMenu" class="hidden md:hidden bg-white border-t mt-2 py-3 px-4">
+            <a href="{% url 'user_dashboard' %}" class="block py-2 text-gray-700 hover:text-indigo-600 transition-colors">
+                <i class="fas fa-chart-line mr-2"></i>Dashboard
+            </a>
+            <a href="{% url 'create_blog' %}" class="block py-2 text-gray-700 hover:text-indigo-600 transition-colors">
+                <i class="fas fa-edit mr-2"></i>Create Blog
+            </a>
+            <a href="/logout/" class="block py-2 text-gray-700 hover:text-indigo-600 transition-colors">
+                <i class="fas fa-sign-out-alt mr-2"></i>Logout
+            </a>
+        </div>
+        {% endif %}
+    </nav>
+
+    {% block content %}
+    <!-- Loading Skeleton for Carousel -->
+    <div id="carouselSkeleton" class="w-full h-[89vh] skeleton"></div>
+
+    <!-- Carousel -->
+    <div id="blogCarousel" class="carousel slide hidden" data-bs-ride="carousel">
+
+        <!-- Indicators/dots -->
+        <div class="carousel-indicators">
+            <button type="button" data-bs-target="#blogCarousel" data-bs-slide-to="0" class="active"
+                aria-current="true" aria-label="Slide 1"></button>
+            <button type="button" data-bs-target="#blogCarousel" data-bs-slide-to="1" aria-label="Slide 2"></button>
+            <button type="button" data-bs-target="#blogCarousel" data-bs-slide-to="2" aria-label="Slide 3"></button>
+        </div>
+
+        <!-- Slides -->
+        <div class="carousel-inner rounded-lg shadow-lg">
+            <div class="carousel-item active">
+                <img src="https://picsum.photos/800/400?random=1" loading="lazy" class="d-block w-100" alt="Random Image">
+                <div class="carousel-caption d-none d-md-block">
+                    <h3 class="text-xl font-bold">Welcome to Karan's Blog</h3>
+                    <p>Discover amazing content and stories</p>
+                </div>
+            </div>
+            <div class="carousel-item">
+                <img src="https://picsum.photos/800/400?random=2" loading="lazy" class="d-block w-100" alt="Random Image">
+                <div class="carousel-caption d-none d-md-block">
+                    <h3 class="text-xl font-bold">Explore New Ideas</h3>
+                    <p>Find inspiration in every post</p>
+                </div>
+            </div>
+            <div class="carousel-item">
+                <img src="https://picsum.photos/800/400?random=3" loading="lazy" class="d-block w-100" alt="Random Image">
+                <div class="carousel-caption d-none d-md-block">
+                    <h3 class="text-xl font-bold">Join Our Community</h3>
+                    <p>Share your thoughts and connect with others</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Left and right controls -->
+        <button class="carousel-control-prev" type="button" data-bs-target="#blogCarousel" data-bs-slide="prev">
+            <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+            <span class="visually-hidden">Previous</span>
+        </button>
+        <button class="carousel-control-next" type="button" data-bs-target="#blogCarousel" data-bs-slide="next">
+            <span class="carousel-control-next-icon" aria-hidden="true"></span>
+            <span class="visually-hidden">Next</span>
+        </button>
+    </div>
+
+    <!-- Blog Posts Section -->
+    <div class="container mx-auto px-4 mt-8 mb-12">
+        <h1 class="text-3xl font-bold text-center mb-2">Latest Blog Posts</h1>
+        <p class="text-gray-600 text-center mb-8">Discover our most recent stories and insights</p>
+        
+        <!-- Loading Skeleton for Blog Posts -->
+        <div id="blogSkeleton" class="row">
+            {% for i in "123" %}
+            <div class="col-md-4 mb-4">
+                <div class="card border-0 shadow-sm">
+                    <div class="skeleton w-full h-48 rounded-top"></div>
+                    <div class="card-body">
+                        <div class="skeleton h-6 w-3/4 mb-2"></div>
+                        <div class="skeleton h-4 w-full mb-2"></div>
+                        <div class="skeleton h-4 w-full mb-2"></div>
+                        <div class="skeleton h-4 w-2/3 mb-4"></div>
+                        <div class="skeleton h-4 w-1/2"></div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <!-- Actual Blog Posts (hidden initially) -->
+        <div id="blogPosts" class="row hidden">
+            {% for blog in blogs %}
+            <div class="col-lg-4 col-md-6 mb-5">
+                <div class="card border-0 shadow-sm h-full">
+                    {% if blog.image %}
+                    <img src="{{ blog.image.url }}" loading="lazy" class="card-img-top" alt="Blog Image"
+                        style="height: 200px; object-fit: cover;">
                     {% else %}
-                    <a href="{% url 'login' %}" class="text-gray-700 hover:text-indigo-600">Login</a>
-                    <a href="{% url 'signup' %}"
-                        class="bg-indigo-500 text-white px-4 py-1 rounded hover:bg-indigo-600">Sign Up</a>
+                    <div class="w-full h-48 bg-gray-200 flex items-center justify-center">
+                        <i class="fas fa-image text-gray-400 text-4xl"></i>
+                    </div>
                     {% endif %}
-                </div>
-            </div>
-        </nav>
-
-        {% block content %}
-        <!-- Carousel -->
-        <div id="blogCarousel" class="carousel slide" data-bs-ride="carousel">
-
-            <!-- Indicators/dots -->
-            <div class="carousel-indicators">
-                <button type="button" data-bs-target="#blogCarousel" data-bs-slide-to="0" class="active"
-                    aria-current="true" aria-label="Slide 1"></button>
-                <button type="button" data-bs-target="#blogCarousel" data-bs-slide-to="1" aria-label="Slide 2"></button>
-                <button type="button" data-bs-target="#blogCarousel" data-bs-slide-to="2" aria-label="Slide 3"></button>
-            </div>
-
-            <!-- Slides -->
-            <div class="carousel-inner rounded-lg shadow-lg">
-                <div class="carousel-item active">
-                    <img src="https://picsum.photos/800/400?random=1" class="d-block w-100 rounded-lg shadow" alt="Random Image">
-
-
-                </div>
-                <div class="carousel-item">
-                    <img src="https://picsum.photos/800/400?random=2" class="d-block w-100 rounded-lg shadow" alt="Random Image">
-
-
-                </div>
-                <div class="carousel-item">
-                    <img src="https://picsum.photos/800/400?random=3" class="d-block w-100 rounded-lg shadow" alt="Random Image">
-                </div>
-            </div>
-
-            <!-- Left and right controls -->
-            <button class="carousel-control-prev" type="button" data-bs-target="#blogCarousel" data-bs-slide="prev">
-                <span class="carousel-control-prev-icon"></span>
-            </button>
-            <button class="carousel-control-next" type="button" data-bs-target="#blogCarousel" data-bs-slide="next">
-                <span class="carousel-control-next-icon"></span>
-            </button>
-
-        </div>
-
-        <div class="container mt-5">
-            <h1 class="text-center mb-4">Blog Posts</h1>
-            <div class="row">
-                {% for blog in blogs %}
-                <div class="col-md-4 mb-4">
-                    <div class="card">
-                        {% if blog.image %}
-                        <img src="{{ blog.image.url }}" class="card-img-top" alt="Blog Image"
-                            style="max-height: 200px; object-fit: cover;">
-                        {% endif %}
-                        <div class="card-body">
-                            <h5 class="card-title">{{ blog.title }}</h5>
-                            <p class="card-text">{{ blog.content|truncatewords:30 }}</p>
-                            <!-- Display a short excerpt -->
-                            <p class="card-text"><small class="text-muted">By {{ blog.author }} on
-                                    {{ blog.created_at|date:"F j, Y" }}</small></p>
+                    <div class="card-body d-flex flex-column">
+                        <h5 class="card-title font-bold text-lg mb-2">{{ blog.title }}</h5>
+                        <p class="card-text text-gray-600 flex-grow-1">{{ blog.content|truncatewords:30 }}</p>
+                        <div class="mt-4 pt-3 border-t border-gray-100">
+                            <p class="card-text text-sm text-muted">
+                                <i class="fas fa-user mr-1"></i>By {{ blog.author }} 
+                                <br>
+                                <i class="far fa-calendar mr-1 mt-2"></i>{{ blog.created_at|date:"F j, Y" }}
+                            </p>
                         </div>
                     </div>
                 </div>
-                {% endfor %}
+            </div>
+            {% empty %}
+            <div class="col-12 text-center py-5">
+                <i class="fas fa-inbox text-4xl text-gray-300 mb-3"></i>
+                <h3 class="text-xl text-gray-500">No blog posts yet</h3>
+                <p class="text-gray-400">Check back later for new content</p>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endblock %}
+
+    <!-- Footer -->
+    <footer class="bg-gray-800 text-white py-8 mt-12">
+        <div class="container mx-auto px-4">
+            <div class="flex flex-col md:flex-row justify-between items-center">
+                <div class="mb-4 md:mb-0">
+                    <h2 class="text-2xl font-bold">Karan's Blog</h2>
+                    <p class="text-gray-400">Sharing ideas and stories</p>
+                </div>
+                <div class="flex space-x-4">
+                    <a href="#" class="text-gray-400 hover:text-white transition-colors">
+                        <i class="fab fa-facebook-f"></i>
+                    </a>
+                    <a href="#" class="text-gray-400 hover:text-white transition-colors">
+                        <i class="fab fa-twitter"></i>
+                    </a>
+                    <a href="#" class="text-gray-400 hover:text-white transition-colors">
+                        <i class="fab fa-instagram"></i>
+                    </a>
+                    <a href="#" class="text-gray-400 hover:text-white transition-colors">
+                        <i class="fab fa-linkedin-in"></i>
+                    </a>
+                </div>
+            </div>
+            <div class="text-center text-gray-400 mt-6 pt-6 border-t border-gray-700">
+                <p>&copy; 2023 Karan's Blog. All rights reserved.</p>
             </div>
         </div>
-        {% endblock %}
+    </footer>
 
-    </body>
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js"
         integrity="sha384-I7E8VVD/ismYTF4hNIPjVp/Zjvgyol6VFvRkX/vR+Vc4jQkC+hVqc2pM8ODewa9r"
         crossorigin="anonymous"></script>
@@ -126,19 +280,52 @@
         crossorigin="anonymous"></script>
 
     <script>
-        const profileBtn = document.getElementById("profileMenuBtn");
-        const dropdown = document.getElementById("profileDropdown");
+        // Wait for DOM to load
+        document.addEventListener('DOMContentLoaded', function() {
+            // Profile dropdown functionality
+            const profileBtn = document.getElementById("profileMenuBtn");
+            const dropdown = document.getElementById("profileDropdown");
+            
+            if (profileBtn && dropdown) {
+                profileBtn.addEventListener("click", (e) => {
+                    e.stopPropagation();
+                    dropdown.classList.toggle("hidden");
+                });
 
-        profileBtn.addEventListener("click", () => {
-            dropdown.classList.toggle("hidden");
-        });
-
-        // Optional: close if clicked outside
-        document.addEventListener("click", (e) => {
-            if (!profileBtn.contains(e.target) && !dropdown.contains(e.target)) {
-                dropdown.classList.add("hidden");
+                // Close if clicked outside
+                document.addEventListener("click", (e) => {
+                    if (!profileBtn.contains(e.target) && !dropdown.contains(e.target)) {
+                        dropdown.classList.add("hidden");
+                    }
+                });
             }
+
+            // Mobile menu functionality
+            const mobileMenuBtn = document.getElementById("mobileMenuBtn");
+            const mobileMenu = document.getElementById("mobileMenu");
+            
+            if (mobileMenuBtn && mobileMenu) {
+                mobileMenuBtn.addEventListener("click", () => {
+                    mobileMenu.classList.toggle("hidden");
+                });
+            }
+
+            // Simulate content loading (remove this in production)
+            setTimeout(() => {
+                // Show carousel and hide skeleton
+                const carouselSkeleton = document.getElementById('carouselSkeleton');
+                const blogCarousel = document.getElementById('blogCarousel');
+                const blogSkeleton = document.getElementById('blogSkeleton');
+                const blogPosts = document.getElementById('blogPosts');
+                
+                if (carouselSkeleton) carouselSkeleton.classList.add('hidden');
+                if (blogCarousel) blogCarousel.classList.remove('hidden');
+                if (blogSkeleton) blogSkeleton.classList.add('hidden');
+                if (blogPosts) blogPosts.classList.remove('hidden');
+            }, 1500); // Simulate 1.5s loading time
         });
     </script>
+
+</body>
 
 </html>
