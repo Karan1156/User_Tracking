@@ -144,11 +144,12 @@ DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
 
 CLOUDINARY_STORAGE = {
     'CLOUD_NAME': 'dldkpgbff',
-    'API_KEY': '678325629724181',
+    'API_KEY': '424569951254427',
     'API_SECRET': 'XbMW9vBQIBKt3wsuRJX5iwvDJhc'
 }
 
 LOGIN_URL = '/login/'
 LOGIN_REDIRECT_URL = '/user/'
 LOGOUT_REDIRECT_URL = '/login/'
+
 
