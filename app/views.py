@@ -15,6 +15,7 @@ from django.db.models.functions import TruncDate
 from django.core.serializers.json import DjangoJSONEncoder
 import cloudinary.uploader
 from django.db import connection
+from django.db.models import Count
 
 
 def health_check(request):
@@ -307,6 +308,7 @@ def view_blog(request, id):
         print("App loader directories:", AppLoader.get_dirs())
     
     return render(request, 'view_blog.html', {'blog': blog})
+
 
 
 
