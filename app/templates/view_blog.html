@@ -1,0 +1,26 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ blog.title }} - Blog App{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <article>
+            <h1 class="mb-3">{{ blog.title }}</h1>
+            <p class="text-muted">By {{ blog.author.username }} on {{ blog.created_at|date:"M d, Y" }}</p>
+            
+            {% if blog.image %}
+                <img src="{{ blog.image.url }}" class="img-fluid rounded mb-4" alt="{{ blog.title }}">
+            {% endif %}
+            
+            <div class="blog-content">
+                {{ blog.content|linebreaks }}
+            </div>
+        </article>
+        
+        <div class="mt-4">
+            <a href="{% url 'home' %}" class="btn btn-outline-primary">Back to Home</a>
+        </div>
+    </div>
+</div>
+{% endblock %}
