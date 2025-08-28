@@ -1,92 +1,598 @@
 <!DOCTYPE html>
 <html lang="en">
 
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <!-- Bootstrap CSS -->
-        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.5/dist/css/bootstrap.min.css" rel="stylesheet"
-            integrity="sha384-SgOJa3DmI69IUzQ2PVdRZhwQ+dy64/BUtbMJw1MZ8t5HZApcHrRKUc4W0kG879m7" crossorigin="anonymous">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.5/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-SgOJa3DmI69IUzQ2PVdRZhwQ+dy64/BUtbMJw1MZ8t5HZApcHrRKUc4W0kG879m7" crossorigin="anonymous">
 
-        <!-- Leaflet CSS -->
-        <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 
-        <!-- Leaflet JS -->
-        <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-        <title>Document</title>
-    </head>
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
-    <body>
-        <h1>Admin Dashboard</h1>
-
-        <table class="table">
-            <thead>
-                <tr>
-                    <th>Username</th>
-                    <th>Email</th>
-                    <th>Blogs</th>
-                    <th>Joined</th>
-                    <th>Action</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for user in users %}
-                <tr>
-                    <td>{{ user.username }}</td>
-                    <td>{{ user.email }}</td>
-                    <td>{{ user.blog_count }}</td>
-                    <td>{{ user.date_joined|date:"Y-m-d" }}</td>
-                    <td>
-                        <form method="POST" action="{% url 'delete_user' user.id %}">
-                            {% csrf_token %}
-                            <button class="btn btn-danger btn-sm"
-                                onclick="return confirm('Are you sure?')">Delete</button>
-                        </form>
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-
-        <canvas id="signupChart"></canvas>
-
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
-<script>
-    const signupData = JSON.parse('{{ user_signup_dates|safe|escapejs }}');
-    console.log(signupData); // Confirm it works!
-
-    const ctx = document.getElementById('signupChart').getContext('2d');
-
-    new Chart(ctx, {
-        type: 'bar',
-        data: {
-            labels: signupData,
-            datasets: [{
-                label: 'User Signups',
-                data: signupData.map(() => 1),
-                backgroundColor: 'rgba(54, 162, 235, 0.5)',
-                borderColor: 'rgba(54, 162, 235, 1)',
-                borderWidth: 1
-            }]
+    <style>
+        :root {
+            --primary-color: #3498db;
+            --secondary-color: #2c3e50;
+            --danger-color: #e74c3c;
+            --success-color: #2ecc71;
+            --warning-color: #f39c12;
+            --info-color: #17a2b8;
+            --light-color: #f8f9fa;
+            --dark-color: #343a40;
         }
-    });
-</script>
 
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f5f8fa;
+            color: #333;
+            margin: 0;
+            padding: 0;
+        }
+
+        .navbar {
+            background-color: var(--secondary-color);
+            color: white;
+            padding: 12px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .navbar h1 {
+            margin: 0;
+            font-size: 24px;
+            font-weight: 600;
+        }
+
+        .nav-buttons button {
+            margin-left: 10px;
+            padding: 8px 16px;
+            font-size: 14px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .nav-buttons button:hover {
+            opacity: 0.9;
+            transform: translateY(-2px);
+        }
+
+        .nav-buttons a {
+            text-decoration: none;
+            color: #fff;
+        }
+
+        .container {
+            padding: 20px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .stats-container {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+
+        .stat-card {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            flex: 1;
+            min-width: 200px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            transition: transform 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .stat-card i {
+            font-size: 24px;
+            margin-bottom: 10px;
+        }
+
+        .stat-card.users i {
+            color: var(--primary-color);
+        }
+
+        .stat-card.blogs i {
+            color: var(--success-color);
+        }
+
+        .stat-card.visitors i {
+            color: var(--warning-color);
+        }
+
+        .stat-card.admins i {
+            color: var(--danger-color);
+        }
+
+        .stat-number {
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--secondary-color);
+        }
+
+        .stat-label {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .dashboard-section {
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid var(--primary-color);
+        }
+
+        .section-header h2 {
+            color: var(--secondary-color);
+            margin: 0;
+            font-weight: 600;
+        }
+
+        .table-container {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th {
+            background-color: var(--light-color);
+            text-align: left;
+            padding: 12px 15px;
+            font-weight: 600;
+            color: var(--secondary-color);
+        }
+
+        td {
+            padding: 12px 15px;
+            border-bottom: 1px solid #eee;
+        }
+
+        tr:hover {
+            background-color: #f8f9fa;
+        }
+
+        .btn {
+            border-radius: 6px;
+            padding: 8px 16px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .btn-danger {
+            background-color: var(--danger-color);
+            border: none;
+        }
+
+        .btn-danger:hover {
+            background-color: #c0392b;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 400px;
+            margin-bottom: 30px;
+        }
+
+        .map-container {
+            height: 400px;
+            border-radius: 10px;
+            overflow: hidden;
+            margin-bottom: 30px;
+        }
+
+        .card {
+            border: none;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease;
+            margin-bottom: 20px;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+        }
+
+        .card-header {
+            background-color: var(--light-color);
+            padding: 15px 20px;
+            border-bottom: 1px solid #eee;
+            font-weight: 600;
+            color: var(--secondary-color);
+        }
+
+        .card-body {
+            padding: 20px;
+        }
+
+        .filter-section {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .filter-section select, .filter-section input {
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+
+        .pagination {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+        }
+
+        .badge {
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .badge-admin {
+            background-color: var(--danger-color);
+            color: white;
+        }
+
+        .badge-user {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        @media (max-width: 768px) {
+            .stats-container {
+                flex-direction: column;
+            }
+            
+            .stat-card {
+                min-width: 100%;
+            }
+            
+            .filter-section {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Navbar -->
+    <nav class="navbar">
+        <h1><i class="fas fa-cog"></i> Admin Dashboard</h1>
+        <div class="nav-buttons">
+            <button><a href="/"><i class="fas fa-home"></i> Home</a></button>
+            <button><a href="{% url 'user_dashboard' %}"><i class="fas fa-user"></i> User Dashboard</a></button>
+            <button><a href="{% url 'logout' %}"><i class="fas fa-sign-out-alt"></i> Logout</a></button>
+        </div>
+    </nav>
+
+    <div class="container">
+        <!-- Stats Overview -->
+        <div class="stats-container">
+            <div class="stat-card users">
+                <i class="fas fa-users"></i>
+                <div class="stat-number">{{ users|length }}</div>
+                <div class="stat-label">Total Users</div>
+            </div>
+            <div class="stat-card blogs">
+                <i class="fas fa-blog"></i>
+                <div class="stat-number">{{ total_blogs }}</div>
+                <div class="stat-label">Total Blogs</div>
+            </div>
+            <div class="stat-card visitors">
+                <i class="fas fa-eye"></i>
+                <div class="stat-number">{{ total_visitors }}</div>
+                <div class="stat-label">Total Visitors</div>
+            </div>
+            <div class="stat-card admins">
+                <i class="fas fa-user-shield"></i>
+                <div class="stat-number">{{ admin_count }}</div>
+                <div class="stat-label">Admin Users</div>
+            </div>
+        </div>
+
+        <!-- User Management Section -->
+        <div class="dashboard-section">
+            <div class="section-header">
+                <h2><i class="fas fa-user-management"></i> User Management</h2>
+                <div class="filter-section">
+                    <select id="role-filter">
+                        <option value="all">All Roles</option>
+                        <option value="admin">Admins</option>
+                        <option value="user">Users</option>
+                    </select>
+                    <input type="text" id="search-users" placeholder="Search users...">
+                </div>
+            </div>
+            
+            <div class="table-container">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Username</th>
+                            <th>Email</th>
+                            <th>Role</th>
+                            <th>Blogs</th>
+                            <th>Joined</th>
+                            <th>Last Login</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="users-table-body">
+                        {% for user in users %}
+                        <tr>
+                            <td>{{ user.username }}</td>
+                            <td>{{ user.email }}</td>
+                            <td>
+                                {% if user.is_staff or user.is_superuser %}
+                                <span class="badge badge-admin">Admin</span>
+                                {% else %}
+                                <span class="badge badge-user">User</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ user.blog_count }}</td>
+                            <td>{{ user.date_joined|date:"Y-m-d" }}</td>
+                            <td>{{ user.last_login|date:"Y-m-d" }}</td>
+                            <td>
+                                {% if not user.is_superuser %}
+                                <form method="POST" action="{% url 'delete_user' user.id %}">
+                                    {% csrf_token %}
+                                    <button class="btn btn-danger btn-sm"
+                                        onclick="return confirm('Are you sure you want to delete this user?')">
+                                        <i class="fas fa-trash"></i> Delete
+                                    </button>
+                                </form>
+                                {% else %}
+                                <span class="text-muted">Cannot delete superuser</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            
+            <div class="pagination">
+                <!-- Pagination would go here in a real implementation -->
+            </div>
+        </div>
+
+        <!-- Analytics Section -->
+        <div class="dashboard-section">
+            <div class="section-header">
+                <h2><i class="fas fa-chart-line"></i> Analytics</h2>
+            </div>
+            
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header">
+                            User Signups Over Time
+                        </div>
+                        <div class="card-body">
+                            <canvas id="signupChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header">
+                            Blog Statistics
+                        </div>
+                        <div class="card-body">
+                            <canvas id="blogChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="row mt-4">
+                <div class="col-md-12">
+                    <div class="card">
+                        <div class="card-header">
+                            Visitor Locations
+                        </div>
+                        <div class="card-body">
+                            <div id="map" class="map-container"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js"
+        integrity="sha384-I7E8VVD/ismYTF4hNIPjVp/Zjvgyol6VFvRkX/vR+Vc4jQkC+hVqc2pM8ODewa9r"
+        crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.5/dist/js/bootstrap.min.js"
+        integrity="sha384-VQqxDN0EQCkWoxt/0vsQvZswzTHUVOImccYmSyhJTp7kGtPed0Qcx8rK9h9YEgx+"
+        crossorigin="anonymous"></script>
         
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
+    <script>
+        // Sample data - in a real app, this would come from Django
+        const signupData = {
+            labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+            values: [5, 8, 12, 15, 18, 22, 25, 28, 30, 32, 35, 40]
+        };
 
+        const blogData = {
+            labels: ['Technology', 'Travel', 'Food', 'Lifestyle', 'Health'],
+            values: [45, 30, 25, 20, 15]
+        };
 
+        // Initialize charts
+        document.addEventListener('DOMContentLoaded', function() {
+            initCharts();
+            initMap();
+            initUserFilter();
+        });
 
-        <!-- Bootstrap JS -->
-        <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js"
-            integrity="sha384-I7E8VVD/ismYTF4hNIPjVp/Zjvgyol6VFvRkX/vR+Vc4jQkC+hVqc2pM8ODewa9r"
-            crossorigin="anonymous"></script>
-        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.5/dist/js/bootstrap.min.js"
-            integrity="sha384-VQqxDN0EQCkWoxt/0vsQvZswzTHUVOImccYmSyhJTp7kGtPed0Qcx8rK9h9YEgx+"
-            crossorigin="anonymous"></script>
+        function initCharts() {
+            // User signup chart
+            const signupCtx = document.getElementById('signupChart').getContext('2d');
+            new Chart(signupCtx, {
+                type: 'line',
+                data: {
+                    labels: signupData.labels,
+                    datasets: [{
+                        label: 'User Signups',
+                        data: signupData.values,
+                        backgroundColor: 'rgba(52, 152, 219, 0.2)',
+                        borderColor: 'rgba(52, 152, 219, 1)',
+                        borderWidth: 2,
+                        fill: true,
+                        tension: 0.3
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'Monthly User Signups'
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
 
-    </body>
+            // Blog categories chart
+            const blogCtx = document.getElementById('blogChart').getContext('2d');
+            new Chart(blogCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: blogData.labels,
+                    datasets: [{
+                        label: 'Blogs by Category',
+                        data: blogData.values,
+                        backgroundColor: [
+                            'rgba(52, 152, 219, 0.7)',
+                            'rgba(46, 204, 113, 0.7)',
+                            'rgba(241, 196, 15, 0.7)',
+                            'rgba(155, 89, 182, 0.7)',
+                            'rgba(231, 76, 60, 0.7)'
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'Blogs by Category'
+                        }
+                    }
+                }
+            });
+        }
+
+        function initMap() {
+            // Initialize the map
+            const map = L.map('map').setView([20.0, 0.0], 2);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}/.png', {
+                attribution: '&copy; OpenStreetMap contributors'
+            }).addTo(map);
+
+            // Sample visitor locations - in a real app, this would come from Django
+            const visitorLocations = [
+                { lat: 40.7128, lng: -74.0060, name: 'New York', count: 15 },
+                { lat: 34.0522, lng: -118.2437, name: 'Los Angeles', count: 12 },
+                { lat: 51.5074, lng: -0.1278, name: 'London', count: 18 },
+                { lat: 48.8566, lng: 2.3522, name: 'Paris', count: 10 },
+                { lat: 35.6762, lng: 139.6503, name: 'Tokyo', count: 20 },
+                { lat: 40.4168, lng: -3.7038, name: 'Madrid', count: 8 },
+                { lat: -33.8688, lng: 151.2093, name: 'Sydney', count: 14 },
+                { lat: -23.5505, lng: -46.6333, name: 'São Paulo', count: 11 }
+            ];
+
+            // Add markers for each location
+            visitorLocations.forEach(location => {
+                const marker = L.marker([location.lat, location.lng]).addTo(map);
+                marker.bindPopup(`
+                    <strong>${location.name}</strong><br>
+                    Visitors: ${location.count}
+                `);
+            });
+        }
+
+        function initUserFilter() {
+            const roleFilter = document.getElementById('role-filter');
+            const searchInput = document.getElementById('search-users');
+            const tableBody = document.getElementById('users-table-body');
+            const rows = tableBody.getElementsByTagName('tr');
+            
+            roleFilter.addEventListener('change', filterUsers);
+            searchInput.addEventListener('input', filterUsers);
+            
+            function filterUsers() {
+                const roleValue = roleFilter.value;
+                const searchValue = searchInput.value.toLowerCase();
+                
+                for (let i = 0; i < rows.length; i++) {
+                    const row = rows[i];
+                    const roleCell = row.cells[2];
+                    const usernameCell = row.cells[0];
+                    const emailCell = row.cells[1];
+                    
+                    const roleText = roleCell.textContent.toLowerCase();
+                    const usernameText = usernameCell.textContent.toLowerCase();
+                    const emailText = emailCell.textContent.toLowerCase();
+                    
+                    const roleMatch = roleValue === 'all' || 
+                                    (roleValue === 'admin' && roleText.includes('admin')) ||
+                                    (roleValue === 'user' && roleText.includes('user'));
+                    
+                    const searchMatch = usernameText.includes(searchValue) || emailText.includes(searchValue);
+                    
+                    if (roleMatch && searchMatch) {
+                        row.style.display = '';
+                    } else {
+                        row.style.display = 'none';
+                    }
+                }
+            }
+        }
+    </script>
+</body>
 
 </html>
