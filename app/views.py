@@ -104,43 +104,59 @@ def signup(request):
 @login_required
 def user_dashboard(request):
     try:
-        # Get visitor counts by date (single efficient query)
-        # Check what field name your Visitor model uses for the timestamp
-        # Common field names: 'created_at', 'timestamp', 'date_created', or 'date'
+        # Get visitor counts by date
         visitor_counts = Visitor.objects.filter(user=request.user) \
             .annotate(date_only=TruncDate('date')) \
             .values('date_only') \
             .annotate(count=Count('id')) \
             .order_by('date_only')
-        visitor=Visitor.object.all().values()
+        
         # Extract dates and counts
         dates = [v['date_only'].strftime('%Y-%m-%d') for v in visitor_counts]
         counts = [v['count'] for v in visitor_counts]
         
         # Get user's blogs
-        blogs = Blog.objects.filter(author=request.user).values('id', 'title', 'created_at')
+        blogs = Blog.objects.filter(author=request.user)
+        
+        # Get all visitors for this user
+        visitors = Visitor.objects.filter(user=request.user).order_by('-date')
+        
+        # Count visitors with location data
+        visitors_with_location = Visitor.objects.filter(
+            user=request.user, 
+            latitude__isnull=False,
+            longitude__isnull=False
+        ).count()
+        
+        # Get recent visitors (last 10)
+        recent_visitors = visitors[:10]
         
         # Pass the data to the template
         return render(request, 'user_dashboard.html', {
-            'visitor':json.dumps(visitor),
             'visitor_dates': json.dumps(dates),
             'visitor_counts': json.dumps(counts),
             'id': request.user.id,
             'blogs': blogs,
+            'visitors': visitors,
+            'recent_visitors': recent_visitors,
+            'total_visitors': visitors.count(),
+            'visitors_with_location': visitors_with_location,
         })
     except Exception as e:
         # Log the error for debugging
         print(f"Error in user_dashboard: {e}")
         # Fallback without visitor data
-        blogs = Blog.objects.filter(author=request.user).values('id', 'title', 'created_at')
+        blogs = Blog.objects.filter(author=request.user)
         return render(request, 'user_dashboard.html', {
-             'visitor':json.dumps([]),
             'visitor_dates': json.dumps([]),
             'visitor_counts': json.dumps([]),
             'id': request.user.id,
             'blogs': blogs,
+            'visitors': [],
+            'recent_visitors': [],
+            'total_visitors': 0,
+            'visitors_with_location': 0,
         })
-
 
 @login_required
 def create_blog(request, id=None):
@@ -283,6 +299,7 @@ def view_blog(request, id):
         print("App loader directories:", AppLoader.get_dirs())
     
     return render(request, 'view_blog.html', {'blog': blog})
+
 
 
 
