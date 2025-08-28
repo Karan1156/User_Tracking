@@ -360,11 +360,15 @@
         </div>
     </div>
 
-    <!-- Hidden Elements -->
+    <!-- Hidden Elements - FIXED APPROACH -->
     <p id="base-url" style="display: none;">{{ request.build_absolute_uri|slice:":-1" }}</p>
     <p id="get-id" style="display: none;">{{id}}</p>
     <p id="Link" style="display: none;">{% url "pop" request.user.id %}</p>
-    <h1 id="list" style="display:none;">{{ visitors_json|safe }}</h1>
+    
+    <!-- Use a script tag to safely pass JSON data -->
+    <script id="visitors-data" type="application/json">
+        {{ visitors_json|safe }}
+    </script>
 
     <!-- Scripts -->
     <!-- Leaflet JS -->
@@ -423,16 +427,19 @@
             attribution: '&copy; OpenStreetMap contributors'
         }).addTo(map);
 
-        // Process visitor data
+        // Process visitor data - FIXED VERSION
         function processVisitorData() {
-            let data = null;
             try {
-                const dataElement = document.getElementById('list');
-                data = JSON.parse(dataElement.innerText);
+                const dataElement = document.getElementById('visitors-data');
+                if (!dataElement.textContent.trim()) {
+                    console.warn("No visitor data found");
+                    return [];
+                }
+                return JSON.parse(dataElement.textContent);
             } catch (err) {
-                console.error("Failed to parse JSON:", err);
+                console.error("Failed to parse visitor JSON:", err);
+                return [];
             }
-            return data;
         }
 
         const data = processVisitorData();
@@ -441,24 +448,37 @@
 
         if (data && data.length > 0) {
             data.forEach(visitor => {
-                if (typeof visitor.latitude !== 'number' || typeof visitor.longitude !== 'number') {
-                    console.warn(`Skipping invalid visitor data:`, visitor);
+                // Check if visitor has valid coordinates
+                const hasValidCoords = visitor.latitude !== null && 
+                                      visitor.longitude !== null &&
+                                      !isNaN(parseFloat(visitor.latitude)) && 
+                                      !isNaN(parseFloat(visitor.longitude));
+                
+                if (!hasValidCoords) {
+                    console.warn(`Skipping visitor with invalid coordinates:`, visitor);
                     return;
                 }
 
+                const lat = parseFloat(visitor.latitude);
+                const lng = parseFloat(visitor.longitude);
+                
                 locationCount++;
-                var marker = L.marker([visitor.latitude, visitor.longitude]).addTo(map);
+                var marker = L.marker([lat, lng]).addTo(map);
 
-                fetch(`https://nominatim.openstreetmap.org/reverse?lat=${visitor.latitude}&lon=${visitor.longitude}&format=json`)
+                // Try to get address information
+                fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json`)
                     .then(response => response.json())
                     .then(data => {
-                        var address = data.address;
-                        var displayAddress = `${address.road || ''}, ${address.city || address.town || address.village || ''}`;
+                        var address = data.address || {};
+                        var displayAddress = `${address.road || ''}, ${address.city || address.town || address.village || address.county || ''}`.trim();
+                        if (displayAddress.endsWith(',')) {
+                            displayAddress = displayAddress.slice(0, -1);
+                        }
 
                         marker.bindPopup(`
                             <strong>${visitor.name || 'Unknown Visitor'}</strong><br>
-                            Location: (${visitor.latitude.toFixed(4)}, ${visitor.longitude.toFixed(4)})<br>
-                            Address: ${displayAddress}<br>
+                            Location: (${lat.toFixed(4)}, ${lng.toFixed(4)})<br>
+                            ${displayAddress ? `Address: ${displayAddress}<br>` : ''}
                             Date: ${new Date(visitor.date).toLocaleDateString()}
                         `);
                     })
@@ -466,12 +486,12 @@
                         console.error('Error fetching address:', error);
                         marker.bindPopup(`
                             <strong>${visitor.name || 'Unknown Visitor'}</strong><br>
-                            Location: (${visitor.latitude.toFixed(4)}, ${visitor.longitude.toFixed(4)})<br>
+                            Location: (${lat.toFixed(4)}, ${lng.toFixed(4)})<br>
                             Date: ${new Date(visitor.date).toLocaleDateString()}
                         `);
                     });
 
-                bounds.extend([visitor.latitude, visitor.longitude]);
+                bounds.extend([lat, lng]);
 
                 // Add visitor to the list
                 const linkEl = document.createElement('div');
@@ -488,6 +508,9 @@
 
             if (!bounds.isEmpty()) {
                 map.fitBounds(bounds, { padding: [50, 50] });
+            } else {
+                // If no valid coordinates, set a default view
+                map.setView([20.0, 0.0], 2);
             }
             
             // Update location count
@@ -510,7 +533,18 @@
                 })
                 .catch(err => {
                     console.error('Failed to copy: ', err);
-                    alert("Failed to copy link. Please try again.");
+                    // Fallback method for older browsers
+                    const textArea = document.createElement("textarea");
+                    textArea.value = baseURL;
+                    document.body.appendChild(textArea);
+                    textArea.select();
+                    try {
+                        document.execCommand('copy');
+                        alert("Visitor tracking link copied to clipboard: " + baseURL);
+                    } catch (fallbackErr) {
+                        alert("Failed to copy link. Please try again or manually copy: " + baseURL);
+                    }
+                    document.body.removeChild(textArea);
                 });
         }
     </script>
