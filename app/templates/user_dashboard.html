@@ -332,7 +332,7 @@
             <div class="col-md-6 col-lg-4 mb-4">
                 <div class="card h-100">
                     {% if blog.image %}
-                    <img src="{{ blog.image.url }}" class="card-img-top" alt="Blog Image">
+                    <img src="{{ blog.image_or_default }}" class="card-img-top" alt="Blog Image">
                     {% else %}
                     <div class="card-img-top bg-secondary d-flex align-items-center justify-content-center">
                         <i class="fas fa-image fa-3x text-light"></i>
@@ -388,6 +388,7 @@
         // Fetch the dates and counts passed from Django as JSON
         const visitorDates = JSON.parse('{{ visitor_dates|safe|escapejs }}');
         const visitorCounts = JSON.parse('{{ visitor_counts|safe|escapejs }}');
+        const visitorsData = JSON.parse('{{ visitors_json|safe|escapejs }}');
 
         // Initialize visitor chart
         const ctxVisitor = document.getElementById('visitorChart').getContext('2d');
@@ -432,22 +433,20 @@
         const bounds = L.latLngBounds();
         let hasMarkers = false;
         
-        {% for visitor in visitors %}
-            {% if visitor.latitude and visitor.longitude %}
-                const lat = {{ visitor.latitude }};
-                const lng = {{ visitor.longitude }};
-                const marker = L.marker([lat, lng]).addTo(map);
+        visitorsData.forEach(visitor => {
+            if (visitor.latitude && visitor.longitude) {
+                const marker = L.marker([visitor.latitude, visitor.longitude]).addTo(map);
                 
                 marker.bindPopup(`
-                    <strong>{{ visitor.name|escapejs }}</strong><br>
-                    Date: {{ visitor.date|date:"F j, Y g:i A" }}<br>
-                    Location: (${lat.toFixed(4)}, ${lng.toFixed(4)})
+                    <strong>${visitor.name}</strong><br>
+                    Date: ${new Date(visitor.date).toLocaleDateString()}<br>
+                    Location: (${visitor.latitude.toFixed(4)}, ${visitor.longitude.toFixed(4)})
                 `);
                 
-                bounds.extend([lat, lng]);
+                bounds.extend([visitor.latitude, visitor.longitude]);
                 hasMarkers = true;
-            {% endif %}
-        {% endfor %}
+            }
+        });
         
         // Fit map to show all markers if we have any
         if (hasMarkers) {
