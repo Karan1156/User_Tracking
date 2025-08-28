@@ -100,7 +100,6 @@ def signup(request):
 
     return render(request, 'signup.html')
 
-
 @login_required
 def user_dashboard(request):
     try:
@@ -118,8 +117,18 @@ def user_dashboard(request):
         # Get user's blogs
         blogs = Blog.objects.filter(author=request.user)
         
-        # Get all visitors for this user
+        # Get all visitors for this user with location data
         visitors = Visitor.objects.filter(user=request.user).order_by('-date')
+        
+        # Prepare visitor data for JSON serialization
+        visitors_data = []
+        for visitor in visitors:
+            visitors_data.append({
+                'name': visitor.name,
+                'latitude': float(visitor.latitude) if visitor.latitude else None,
+                'longitude': float(visitor.longitude) if visitor.longitude else None,
+                'date': visitor.date.strftime('%Y-%m-%d %H:%M:%S')
+            })
         
         # Count visitors with location data
         visitors_with_location = Visitor.objects.filter(
@@ -137,7 +146,7 @@ def user_dashboard(request):
             'visitor_counts': json.dumps(counts),
             'id': request.user.id,
             'blogs': blogs,
-            'visitors': visitors,
+            'visitors_json': json.dumps(visitors_data),
             'recent_visitors': recent_visitors,
             'total_visitors': visitors.count(),
             'visitors_with_location': visitors_with_location,
@@ -152,12 +161,11 @@ def user_dashboard(request):
             'visitor_counts': json.dumps([]),
             'id': request.user.id,
             'blogs': blogs,
-            'visitors': [],
+            'visitors_json': json.dumps([]),
             'recent_visitors': [],
             'total_visitors': 0,
             'visitors_with_location': 0,
         })
-
 @login_required
 def create_blog(request, id=None):
     if id:
@@ -299,6 +307,7 @@ def view_blog(request, id):
         print("App loader directories:", AppLoader.get_dirs())
     
     return render(request, 'view_blog.html', {'blog': blog})
+
 
 
 
