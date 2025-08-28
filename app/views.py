@@ -261,8 +261,25 @@ def pop(request, id=None):
                 return redirect('home')
 
     return render(request, 'pop.html')
+from django.template.loader import get_template
+from django.template import TemplateDoesNotExist
+
 def view_blog(request, id):
     blog = get_object_or_404(Blog, id=id)
+    
+    # Debug: Check if template exists
+    try:
+        template = get_template('view_blog.html')
+        print("Template found!")
+    except TemplateDoesNotExist:
+        print("Template not found!")
+        # List directories Django is searching
+        from django.template.loaders.filesystem import Loader as FilesystemLoader
+        from django.template.loaders.app_directories import Loader as AppLoader
+        
+        print("Filesystem loader directories:", FilesystemLoader.get_dirs())
+        print("App loader directories:", AppLoader.get_dirs())
+    
     return render(request, 'view_blog.html', {'blog': blog})
 
 
