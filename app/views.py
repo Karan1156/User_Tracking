@@ -112,7 +112,7 @@ def user_dashboard(request):
             .values('date_only') \
             .annotate(count=Count('id')) \
             .order_by('date_only')
-        
+        visitor=Visitor.object.all().values()
         # Extract dates and counts
         dates = [v['date_only'].strftime('%Y-%m-%d') for v in visitor_counts]
         counts = [v['count'] for v in visitor_counts]
@@ -122,6 +122,7 @@ def user_dashboard(request):
         
         # Pass the data to the template
         return render(request, 'user_dashboard.html', {
+            'visitor':json.dumps(visitor),
             'visitor_dates': json.dumps(dates),
             'visitor_counts': json.dumps(counts),
             'id': request.user.id,
@@ -133,6 +134,7 @@ def user_dashboard(request):
         # Fallback without visitor data
         blogs = Blog.objects.filter(author=request.user).values('id', 'title', 'created_at')
         return render(request, 'user_dashboard.html', {
+             'visitor':json.dumps([]),
             'visitor_dates': json.dumps([]),
             'visitor_counts': json.dumps([]),
             'id': request.user.id,
@@ -281,5 +283,6 @@ def view_blog(request, id):
         print("App loader directories:", AppLoader.get_dirs())
     
     return render(request, 'view_blog.html', {'blog': blog})
+
 
 
