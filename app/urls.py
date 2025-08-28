@@ -30,6 +30,7 @@ urlpatterns = [
     
     # Health check
     path('health/', views.health_check, name='health-check'),
+    path('view/<int:id>/', views.view_blog, name='view_blog'),
 ]
 
 if settings.DEBUG:
